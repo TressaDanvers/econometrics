@@ -1,18 +1,174 @@
 ---
-output:
-  pdf_document: default
+output: pdf_document
 ---
-
-```{r}
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
 library(tidyverse)
+library(latex2exp)
 ```
 
-```{latex}
-Let $d$ be the lambda: $(\lambda n.(\lambda s.sample(1:s,n)))$.
+# Assignment 1.2
 
-Let the notation $nds$ be equivelant to $(d~n~s)$.
-```
+Let $d$ be the lambda: $(\lambda n.(\lambda s.sample([1...s],n)))$.
 
-```{r}
+Let the notation $nds$ be equivalent to $((d~n)~s)$.
+
+```{r, eval=TRUE, echo=FALSE}
+# As far as I can tell, R treats lambda notation and function notation as identical.
+# Lambda notation suits my programming style better.
 d <- \(n,s) sample(1:n, s)
+
+# Change these values. All images and equations are general, or depend on these values.
+Number <- 2
+Sides <- 6
 ```
+
+## 1. What is the support of $X$?
+
+```{r, eval=TRUE, echo=FALSE}
+S <- \(n,s,bound) (
+  if (missing(bound)) n:(n*s)
+  else n:min(n*s,bound)
+)
+```
+
+The support of $X$ is $\{`r S(Number, Sides)`\}$.
+
+## 2. Is $X$ a discrete or continuous random variable? Explain.
+
+It is discrete. The set of the support of $X$ is a sparse (non-dense).
+    
+That is, $\neg (\forall x,y \in S_X : x<y, (\exists z \in S_X:x<z<y))$.
+
+This is trivially true, as the support of $X$ is finite.
+    
+It therefore cannot be continuous.
+
+In this case, our general formula for the support of nds is $S_{nds}=[n...ns]$.
+
+## 3. Based on your answer to the previous question, construct the pdf or pmf of $X$.
+
+The probability of the value $x$ being chosen from the
+distribution given by $nds$ (denoted $P(x=nds)$) is:
+$$
+\frac{1}{s^n}
+\sum^{\lfloor{\frac{x-n}{s}}\rfloor}_{k=0}
+(-1)^k \binom{n}{k} \binom{x-sk-1}{n-1}
+$$
+...when $x \in S_X$. Otherwise, $P(x=nds)=0$.
+  
+```{r, eval=TRUE, echo=FALSE}
+P <- \(x,n,s) (
+  (0:floor((num(x)-n)/s) 
+   |> map_vec(\(k) ((-1)^k)*choose(n,k)*choose(x-s*k-1,n-1)) 
+   |> reduce(`+`)) / (s^n)
+)
+
+pmf <- \(n,s) (
+  data.frame(x = S(n,s))
+    |> mutate(p = x |> map_vec(\(x) P(x,n,s)))
+)
+
+pmfPlot <- \(n,s) (
+  ggplot()
+    +geom_segment(data=pmf(n,s),aes(x=min(x),y=0,xend=min(x)-n,yend=0),arrow=arrow(length = unit(0.25, "cm")))
+    +geom_segment(data=pmf(n,s),aes(x=min(x),y=0,xend=max(x)+n,yend=0),arrow=arrow(length = unit(0.25, "cm")))
+    +geom_point(data=pmf(n,s),aes(x=x,y=0),shape=21,fill="white")
+    +geom_point(data=pmf(n,s),aes(x=x,y=p),shape=16)
+    +theme_bw()
+    +xlab(TeX("$x$"))
+    +ylab(TeX(paste("$P(x = ", as.character(n), "d", as.character(s), ")$", sep="")))
+    +scale_x_continuous(breaks=0:(n*(s+1)))
+)
+
+pmfPlot(Number,Sides) |> print()
+```
+
+## 4. Construct the cdf of $X$.
+
+This is very similar to the previous question.
+
+The cumulative density of the value $x$ being less than or equal to
+a value from the distribution given by $nds$ (denoted $P(x \leq nds)$) is
+just the sum of probabilities below and equal to x.
+$$
+P(x \leq nds) \doteq \sum^{x}_{k=0} P(k = nds)
+$$
+
+```{r, eval=TRUE, echo=FALSE, warning=FALSE}
+CumulativeP <- \(x,n,s) (S(n,s,x) |> map_vec(\(x) P(x,n,s)) |> reduce(`+`))
+
+cdf <- \(n,s) (
+  data.frame(x = S(n,s))
+    |> mutate(xb = x |> map_vec(\(x) if (x == n*s) NA else x+1))
+    |> mutate(p = x |> map_vec(\(x) CumulativeP(x,n,s)))
+)
+
+cdfPlot <- \(n,s) (
+  ggplot()
+    +geom_segment(data=cdf(n,s),aes(x=x,y=p,xend=x+1,yend=p))
+    +geom_segment(data=cdf(n,s),aes(x=max(x),y=1,xend=max(x)+n,yend=1),arrow=arrow(length = unit(0.25, "cm")))
+    +geom_segment(data=cdf(n,s),aes(x=min(x),y=0,xend=min(x)-n,yend=0),arrow=arrow(length = unit(0.25, "cm")))
+    +geom_point(data=cdf(n,s),aes(x=xb,y=p),shape=21,fill="white")
+    +geom_point(data=cdf(n,s),aes(x=min(x),y=0),shape=21,fill="white")
+    +geom_point(data=cdf(n,s),aes(x=x,y=p),shape=16)
+    +theme_bw()
+    +xlab(TeX("$x$"))
+    +ylab(TeX(paste("$P(x \\leq ", as.character(n), "d", as.character(s), ")$", sep="")))
+    +scale_x_continuous(breaks=0:(n*(s+1)))
+)
+
+cdfPlot(Number,Sides) |> print()
+```
+
+## 5. Compute $E[X]$ and $V[X]$.
+
+A slight modification on the notation you give in the notes gives us our function E.
+
+$$
+E(nds) \doteq \sum_{x\in S_{nds}} xP(x = nds)
+$$
+
+```{r, eval=TRUE, echo=FALSE}
+E <- \(n,s) (S(n,s) |> map_vec(\(x) x*P(x,n,s)) |> reduce(`+`))
+```
+
+$$
+E(`r Number`d`r Sides`) =
+\sum_{x \in \{`r S(Number,Sides)`\}}
+xP(x=`r Number`d`r Sides`)
+$$
+
+The expectation when rolling $`r Number`d`r Sides`$ is $`r E(Number,Sides)`$.
+
+The variance is trivial to calculate.
+
+Variance is normally expressed as $E((X+E(X))^2)$.
+
+This - due to the fact that dice rolls are iid - can be simplified to $E(X^2)+E(X)^2$
+
+The expression would be:
+$$
+V(nds) \doteq
+\left(\sum_{x\in S_{nds}} {x^2}P(x = nds)\right)-
+\left(\sum_{x\in S_{nds}} xP(x = nds)\right)^2
+$$
+
+```{r, eval=TRUE, echo=FALSE}
+Esq <- \(n,s) (S(n,s) |> map_vec(\(x) (x^2)*P(x,n,s)) |> reduce(`+`))
+V <- \(n,s) (Esq(n,s) - (E(n,s)^2))
+```
+
+In this case:
+$$
+V(`r Number`d`r Sides`) \doteq
+\left(\sum_{x \in \{`r S(Number,Sides)`\}} {x^2}P(x = `r Number`d`r Sides`)\right)-
+\left(\sum_{x \in \{`r S(Number,Sides)`\}} xP(x = `r Number`d`r Sides`)\right)^2
+$$
+
+The variance when rolling $`r Number`d`r Sides`$ is $`r V(Number,Sides)`$.
+
+If you are reading the pdf, go ahead and switch over to the Rmd if you
+want to play with the parameters of this document. You can change
+the number of dice and the faces on each die to arbitrary natural numbers.
+
+(Setting them to non-naturals will produce undefined behavior.)
