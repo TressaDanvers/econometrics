@@ -1,0 +1,18 @@
+---
+output:
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{latex}
+Let $d$ be the lambda: $(\lambda n.(\lambda s.sample(1:s,n)))$.
+
+Let the notation $nds$ be equivelant to $(d~n~s)$.
+```
+
+```{r}
+d <- \(n,s) sample(1:n, s)
+```
