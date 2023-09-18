@@ -19,7 +19,7 @@ d <- \(n,s) sample(1:n, s)
 
 # Change these values. All images and equations are general, or depend on these values.
 Number <- 2
-Sides <- 6
+Sides <- 4
 ```
 
 ## 1. What is the support of $X$?
@@ -88,10 +88,10 @@ pmfPlot(Number,Sides) |> print()
 This is very similar to the previous question.
 
 The cumulative density of the value $x$ being less than or equal to
-a value from the distribution given by $nds$ (denoted $P(x \leq nds)$) is
+a value from the distribution given by $nds$ (denoted $P(x \geq nds)$) is
 just the sum of probabilities below and equal to x.
 $$
-P(x \leq nds) \doteq \sum^{x}_{k=0} P(k = nds)
+P(x \geq nds) \doteq \sum^{x}_{k=0} P(k = nds)
 $$
 
 ```{r, eval=TRUE, echo=FALSE, warning=FALSE}
@@ -113,7 +113,7 @@ cdfPlot <- \(n,s) (
     +geom_point(data=cdf(n,s),aes(x=x,y=p),shape=16)
     +theme_bw()
     +xlab(TeX("$x$"))
-    +ylab(TeX(paste("$P(x \\leq ", as.character(n), "d", as.character(s), ")$", sep="")))
+    +ylab(TeX(paste("$P(x \\geq ", as.character(n), "d", as.character(s), ")$", sep="")))
     +scale_x_continuous(breaks=0:(n*(s+1)))
 )
 
