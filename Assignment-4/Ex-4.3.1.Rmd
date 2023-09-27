@@ -1,0 +1,146 @@
+---
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
+SEED <- 123
+set.seed(SEED)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  eval=TRUE,
+  message=FALSE
+)
+
+library(tidyverse)
+library(latex2exp)
+```
+
+# 1. Explain how these estimators relate to your answers to the Exercise in the previous chapter (Ex-3.6.3).
+$$
+E(X)=\frac{\alpha}{\alpha + 1}
+= 1 - \frac{1}{\alpha + 1} 
+ \Leftrightarrow 1-E(X) = \frac{1}{\alpha + 1}
+\Leftrightarrow \frac{1}{1-E(X)} = \alpha + 1
+\Leftrightarrow \frac{1}{1-E(X)}-1 = \alpha
+\Leftrightarrow \alpha = \frac{E(X)}{1-E(X)}
+$$
+
+The expectation of a sample is the mean of that sample.
+
+$$
+\hat{\alpha} =
+\frac{\bar{x}}
+     {1-\bar{x}}
+$$
+
+# 2: Download the dataset `ExBetaSim_1.csv` from the data folder, which contains a simulated sample from this distribution. Use both estimators to estimate $\alpha$.
+
+```{r}
+D <- read.csv("ExBetaSim_1.csv")
+
+est <- \(x) {
+  mu = (x |> reduce(`+`)) / length(x)
+  return (mu / (1-mu))
+}
+
+est2 <- \(x) {
+  mu = (x |> map_vec(log) |> reduce(`+`)) / length(x)
+  return (-1 / mu)
+}
+
+alpha_hat <- D$X |> est()
+alpha_hat2 <- D$X |> est2()
+```
+
+For the data set and estimator 1, the estimated $\hat{\alpha}$ is `r alpha_hat`.
+For the data set and estimator 2, the estimated $\tilde{\alpha}$ is `r alpha_hat2`.
+
+# 3. Plot the cdf implied by your estimates, and also show the "empirical cumulative density function" of your data, which you can do in `ggplot2` using `stat_ecdf`.
+
+The red line is the first estimator, and the purple line is the second.
+
+```{r warning=FALSE}
+F <- \(alpha) \(x) x^alpha
+f <- \(alpha) \(x) alpha*x^(alpha-1)
+
+print(ggplot(data=D)
+  +geom_segment(x=0,y=0,xend=-0.5,yend=0,arrow=arrow(length = unit(0.25, "cm")))
+  +geom_segment(x=1,y=1,xend=1.5,yend=1,arrow=arrow(length = unit(0.25, "cm")))
+  +geom_function(fun = F(alpha_hat), color="red")
+  +geom_function(fun = F(alpha_hat2), color="purple")
+  +stat_ecdf(aes(x=X))
+  +ylim(min=0,max=1)
+  +ylab(TeX("$F(X)$"))
+  +xlim(min=-0.5,max=1.5)
+  +xlab(TeX("$X$"))
+  +theme_bw()
+)
+```
+
+```{r}
+alpha <- 0.7
+F_inv <- \(x) x^(1/alpha)
+
+S <- 10000
+N <- 30
+D2 <- data.frame(X=sample(
+  (expand_grid(simstep=1:S,i=1:N) |>
+    mutate(X = runif(n=N*S,min=0,max=1)) |>
+    mutate(X = F_inv(X)))$X,
+  replace=TRUE,
+  size=N
+))
+
+alpha_hat <- D2$X |> est()
+alpha_hat2 <- D2$X |> est2()
+```
+
+# 4. (Simulation exercise) Fix $\alpha=`r alpha`$. Simulate some properties of these estimators for a sample size of $N=`r N`$. Are the estimators biased? Does one stand out as better than the other? Hint: You can simulate the distribution of $X$ by transforming uniform random numbers. Specifically, if $U\sim\mathrm{U}[0,1]$, then: $X = U^{\frac{1}{\alpha}}$ will have the correct distribution.
+
+The random sample taken from $F$ is:
+
+`r D2$X`
+
+The seed for generating this specific sample was `r SEED`.
+
+This sample has an $\hat{\alpha}$ of $`r alpha_hat`$
+This sample has an $\tilde{\alpha}$ of $`r alpha_hat2`$
+
+Here is a plot of the data (the red line is an estimate based on the sample, the blue line is the actual cdf):
+
+```{r, warning=FALSE}
+print(ggplot(data=D2)
+  +geom_segment(x=0,y=0,xend=-0.5,yend=0,arrow=arrow(length = unit(0.25, "cm")))
+  +geom_segment(x=1,y=1,xend=1.5,yend=1,arrow=arrow(length = unit(0.25, "cm")))
+  +geom_function(fun = F(alpha_hat), color="red")
+  +geom_function(fun = F(alpha_hat2), color="purple")
+  +geom_function(fun = F(alpha), color="blue")
+  +stat_ecdf(aes(x=X))
+  +ylim(min=0,max=1)
+  +ylab(TeX("$F(X)$"))
+  +xlim(min=-0.5,max=1.5)
+  +xlab(TeX("$X$"))
+  +theme_bw()
+)
+```
+
+I don't think either estimator is particularly biased. I have experimented with larger sample sizes -
+(which you can also do by changing the N variable in the Rmd file) - and the results
+speak for themselves. At 10000 values, the data was a perfect match. Is one more biased than the other
+at lower values? I don't think so. I could not find a problem with either for the seeds I tested.
+I was able to find a few seeds where the second was significantly better than the first.
+However, I had also found a few seeds where the first was closest.
+
+In conclusion: They're both kinda good. If I was forced to pick, I'd go for the second.
+
+
+
+
+
+
+
+
+
+
