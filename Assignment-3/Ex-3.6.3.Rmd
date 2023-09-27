@@ -1,0 +1,234 @@
+---
+output: pdf_document
+---
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  eval=TRUE,
+  message=FALSE
+)
+
+library(tidyverse)
+```
+
+```{r}
+F <- \(alpha)\(x) { if (x <= 0) 0 else if (1 <= x) 1 else x^alpha }
+```
+
+# 1. What is the support of $X$, and is $X$ a discrete or continuous random variable?
+
+$X$ is a continuous random variable described by $F$ such that:
+
+$$
+F: \mathbb{R} \mapsto \mathbb{R}
+$$
+
+$$
+\left(
+  F(x) \doteq
+  \begin{cases}
+    0        & \text{if } x \leq 0 \\
+    x^\alpha & \text{if } 0 < x < 1 \\
+    1        & \text{if } x \geq 1
+  \end{cases}
+\right)
+: \alpha \in \mathbb{R}^{+}
+$$
+
+$X$ is clearly continuous. I have a proof of this in the "Extras" section, just for fun.
+
+For any continuous random variable $X$ described by a cdf $F$,
+that random variable's support can be described as:
+$$
+S_X = \left\{x ~|~ 0 < \mathrm{F}(x) < 1\right\}
+$$
+For our function $F$, that occurs at the interval $(0,1)$.
+
+The way the function is written excludes 0 and 1,
+as their probability density must be 0.
+
+# 2. calculate the pdf, $f(x)$
+
+pdf is the derivative of the cdf for a continuous random variable.
+
+$$
+\frac{\delta F(x)}{\delta x} =
+\begin{cases}
+  0                     & \text{if } x \leq 0 \\
+  \alpha x^{\alpha - 1} & \text{if } 0 < x < 1 \\
+  0                     & \text{if } x \geq 1
+\end{cases}
+$$
+
+# 3. Calculate $E[X]$ and $V[X]$.
+
+In our case (I'm assuming we're meant to assume $iid$):
+$$
+E(X) = \int_{0}^{1} x \cdot \alpha x^{\alpha - 1} \delta x
+$$
+$$
+\dots = \int_{0}^{1} \alpha x^\alpha \delta x
+$$
+$$
+\dots = \frac{\alpha \cdot 1^{\alpha + 1}}{\alpha + 1} - \frac{\alpha \cdot 0^{\alpha + 1}}{\alpha + 1}
+= \frac{\alpha \cdot 1^{\alpha + 1} - \alpha \cdot 0^{\alpha + 1}}{\alpha + 1}
+= \frac{\alpha}{\alpha + 1}
+$$
+
+$$
+V(X) = \int_{0}^{1} x^2 \cdot \alpha x^{\alpha - 1} \delta x - \frac{\alpha^{2}}{(\alpha + 1)^{2}}
+$$
+$$
+\dots = \int_{0}^{1} \alpha x^{\alpha + 1} \delta x - \frac{\alpha^{2}}{(\alpha + 1)^{2}}
+$$
+$$
+\dots = \frac{\alpha}{\alpha + 2} - \frac{\alpha^{2}}{(\alpha + 1)^{2}}
+= \frac{\alpha}{a^3 + 4a^2 + 5a + 2}
+$$
+
+# Extra:
+
+Given a random variable $X$ described by a cdf $F$, $X$ is continuous iff
+$F$ is continuous.
+
+Continuity, as a property in the reals ($\mathbb{R}$), can be expressed:
+$$
+f: \mathbb{R} \mapsto \mathbb{R} 
+$$
+$$
+\forall y \in \mathbb{R},
+F \text{ is continuous at } y \leftrightarrow
+\left(
+  \lim_{x\rightarrow y^{+}} f(x) = \lim_{x\rightarrow y^{-}} f(x) = f(y)
+\right)
+~~(A)
+$$
+
+The following is a proof that $F$ is continuous:
+
+***
+
+$$
+\forall \alpha \in \mathbb{R},
+1^\alpha = 1
+~~(B)
+$$
+
+$$
+\forall \alpha \in \mathbb{R} \smallsetminus \{0\},
+0^\alpha = 0
+~~(C)
+$$
+
+$$
+\forall \alpha \in \mathbb{R} \smallsetminus \{0\},
+x^\alpha \text{ is continuous.}
+~~(D)
+$$
+
+***
+
+$$
+\lim_{x \rightarrow 1^{+}} F(x) = \lim_{x \rightarrow 1^{+}} 1 = 1 ~~(1)
+$$
+$$
+\lim_{x \rightarrow 1^{-}} F(x) = \lim_{x \rightarrow 1^{-}} x^{\alpha} = 1^{\alpha} = 1 ~~(\text{using }A,B,D) ~~(2)
+$$
+$$
+\lim_{x \rightarrow 1^{+}} F(x) = \lim_{x \rightarrow 1^{-}} F(x) = 1 ~~(\text{using }1,2) ~~(3)
+$$
+$$
+\therefore F(x) \text{ is continuous at } 1 ~~(\text{using }A,3) ~~(I)
+$$
+
+***
+
+$$
+\lim_{x \rightarrow 0^{-}} F(x) = \lim_{x \rightarrow 0^{-}} 0 = 0 ~~(1)
+$$
+$$
+\lim_{x \rightarrow 0^{+}} F(x) = \lim_{x \rightarrow 0^{+}} x^{\alpha} = 0^{\alpha} = 0 ~~(\text{using }A,C,D) ~~(2)
+$$
+$$
+\lim_{x \rightarrow 0^{+}} F(x) = \lim_{x \rightarrow 0^{-}} F(x) = 0 ~~(\text{using }1,2) ~~(3)
+$$
+$$
+\therefore F(x) \text{ is continuous at } 0 ~~(\text{using }A,3) ~~(II)
+$$
+
+***
+
+$$
+F(x): x \in (0,1) = x^\alpha ~~(1)
+$$
+$$
+x^\alpha \text{ is continuous.} ~~(\text{using }D) ~~(2)
+$$
+$$
+\therefore F(x) \text{ is continuous over } (0,1) ~~(\text{using }1,2) ~~(III)
+$$
+
+***
+
+$$
+F(x): x \in (1,\infty) = 1 ~~(1)
+$$
+$$
+1 \text{ is continuous.} ~~(\text{trivially}) ~~(2)
+$$
+$$
+\therefore F(x) \text{ is continuous over } (1,\infty) ~~(\text{using }1,2) ~~(IV)
+$$
+
+***
+
+$$
+F(x): x \in (-\infty,0) = 0 ~~(1)
+$$
+$$
+0 \text{ is continuous.} ~~(\text{trivially}) ~~(2)
+$$
+$$
+\therefore F(x) \text{ is continuous over } (-\infty,0) ~~(\text{using }1,2) ~~(V)
+$$
+
+***
+
+$$
+\therefore F \text{ is continuous.} ~~(\text{using }I,II,III,IV,V)
+$$
+
+***
+
+$$ \blacksquare $$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
