@@ -1,6 +1,6 @@
 ---
 output: pdf_document
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 ```{r, eval=TRUE, echo=FALSE, message=FALSE}
@@ -21,7 +21,7 @@ library(latex2exp)
 $$
 E(X)=\frac{\alpha}{\alpha + 1}
 = 1 - \frac{1}{\alpha + 1} 
- \Leftrightarrow 1-E(X) = \frac{1}{\alpha + 1}
+\Leftrightarrow 1-E(X) = \frac{1}{\alpha + 1}
 \Leftrightarrow \frac{1}{1-E(X)} = \alpha + 1
 \Leftrightarrow \frac{1}{1-E(X)}-1 = \alpha
 \Leftrightarrow \alpha = \frac{E(X)}{1-E(X)}
