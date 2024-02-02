@@ -7,7 +7,7 @@ library(tidyverse)
 getwd()
 
 # Sets the working dir to "Ex_UnderstandingSomeCode".
-setwd("Ex_UnderstandingSomeCode")
+setwd("Ex-UnderstandingSomeCode")
 
 # Loads the csv file @vv into memory and assigns it to be the value of D. 
 D <- "https://vincentarelbundock.github.io/Rdatasets/csv/AER/FrozenJuice.csv" |> read.csv()
