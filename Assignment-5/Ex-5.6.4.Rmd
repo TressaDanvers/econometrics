@@ -1,0 +1,15 @@
+---
+output: pdf_document
+editor_options:
+  chunk_output_type: console
+---
+```{r, eval=TRUE, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  eval=TRUE,
+  message=FALSE
+)
+
+library(tidyverse)
+library(latex2exp)
+```
